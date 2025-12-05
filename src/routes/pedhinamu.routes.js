@@ -14,7 +14,9 @@ const router = Router();
    BASIC PEDHINAMU CREATION + LIST
 ---------------------------------------------*/
 router.post("/", createPedhinamu);       // Create Pedhinamu (basic)
-router.get("/", getPedhinamus);          // List all (pagination)
+router.get("/", getPedhinamus);   
+router.put("/:id", updatePedhinamuTree);
+       // List all (pagination)
 
 /* ------------------------------------------
    FULL FORM (after basic pedhinamu)

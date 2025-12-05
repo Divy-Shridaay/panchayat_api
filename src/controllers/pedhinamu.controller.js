@@ -24,63 +24,66 @@ export const createPedhinamu = async (req, res) => {
         mobile: d.mukhya.mobile || ""
       },
 
-      heirs: (d.heirs || []).filter(h => h.name && h.relation).map(h => ({
-        name: h.name,
-        relation: h.relation,
-        age: h.age,
-        dob: h.dob || "",
-        dobDisplay: h.dobDisplay || "",
-        mobile: h.mobile || "",
-        isDeceased: h.isDeceased || false,
-        dod: h.dod || "",
-        dodDisplay: h.dodDisplay || "",
+      heirs: (d.heirs || [])
+        .filter(h => h.name?.trim())  // ✔ Only remove completely empty heir rows
+        .map(h => ({
+          name: h.name || "",
+          relation: h.relation || "",  // ✔ Relation optional
+          age: h.age || "",
+          dob: h.dob || "",
+          dobDisplay: h.dobDisplay || "",
+          mobile: h.mobile || "",
+          isDeceased: h.isDeceased || false,
+          dod: h.isDeceased ? (h.dod || "") : "",
+          dodDisplay: h.isDeceased ? (h.dodDisplay || "") : "",
 
-        subFamily: {
-          spouse: {
-            name: h.subFamily?.spouse?.name || "",
-            age: h.subFamily?.spouse?.age || "",
-            relation: h.subFamily?.spouse?.relation || "",
-            dob: h.subFamily?.spouse?.dob || "",
-            dobDisplay: h.subFamily?.spouse?.dobDisplay || "",
-            isDeceased: h.subFamily?.spouse?.isDeceased || false,
-            dod: h.subFamily?.spouse?.dod || "",
-            dodDisplay: h.subFamily?.spouse?.dodDisplay || ""
-          },
-
-          children: (h.subFamily?.children || []).map(c => ({
-            name: c.name,
-            age: c.age,
-            relation: c.relation,
-            dob: c.dob || "",
-            dobDisplay: c.dobDisplay || "",
-            isDeceased: c.isDeceased || false,
-            dod: c.dod || "",
-            dodDisplay: c.dodDisplay || "",
-
+          subFamily: {
             spouse: {
-              name: c.spouse?.name || "",
-              age: c.spouse?.age || "",
-              relation: c.spouse?.relation || "",
-              dob: c.spouse?.dob || "",
-              dobDisplay: c.spouse?.dobDisplay || "",
-              isDeceased: c.spouse?.isDeceased || false,
-              dod: c.spouse?.dod || "",
-              dodDisplay: c.spouse?.dodDisplay || ""
+              name: h.subFamily?.spouse?.name || "",
+              age: h.subFamily?.spouse?.age || "",
+              relation: h.subFamily?.spouse?.relation || "",
+              relation2: h.subFamily?.spouse?.relation2 || "",
+              dob: h.subFamily?.spouse?.dob || "",
+              dobDisplay: h.subFamily?.spouse?.dobDisplay || "",
+              isDeceased: h.subFamily?.spouse?.isDeceased || false,
+              dod: h.subFamily?.spouse?.isDeceased ? (h.subFamily?.spouse?.dod || "") : "",
+              dodDisplay: h.subFamily?.spouse?.isDeceased ? (h.subFamily?.spouse?.dodDisplay || "") : "",
             },
 
-            children: (c.children || []).map(gc => ({
-              name: gc.name,
-              age: gc.age,
-              relation: gc.relation,
-              dob: gc.dob || "",
-              dobDisplay: gc.dobDisplay || "",
-              isDeceased: gc.isDeceased || false,
-              dod: gc.dod || "",
-              dodDisplay: gc.dodDisplay || ""
+            children: (h.subFamily?.children || []).map(c => ({
+              name: c.name || "",
+              age: c.age || "",
+              relation: c.relation || "",
+              dob: c.dob || "",
+              dobDisplay: c.dobDisplay || "",
+              isDeceased: c.isDeceased || false,
+              dod: c.isDeceased ? (c.dod || "") : "",
+              dodDisplay: c.isDeceased ? (c.dodDisplay || "") : "",
+
+              spouse: {
+                name: c.spouse?.name || "",
+                age: c.spouse?.age || "",
+                relation: c.spouse?.relation || "",
+                dob: c.spouse?.dob || "",
+                dobDisplay: c.spouse?.dobDisplay || "",
+                isDeceased: c.spouse?.isDeceased || false,
+                dod: c.spouse?.isDeceased ? (c.spouse?.dod || "") : "",
+                dodDisplay: c.spouse?.isDeceased ? (c.spouse?.dodDisplay || "") : "",
+              },
+
+              children: (c.children || []).map(gc => ({
+                name: gc.name || "",
+                age: gc.age || "",
+                relation: gc.relation || "",
+                dob: gc.dob || "",
+                dobDisplay: gc.dobDisplay || "",
+                isDeceased: gc.isDeceased || false,
+                dod: gc.isDeceased ? (gc.dod || "") : "",
+                dodDisplay: gc.isDeceased ? (gc.dodDisplay || "") : "",
+              }))
             }))
-          }))
-        }
-      }))
+          }
+        }))
     };
 
     const saved = await Pedhinamu.create(data);
@@ -199,11 +202,13 @@ export const updatePedhinamuTree = async (req, res) => {
       return res.status(400).json({ error: "Mukhya is required" });
     }
 
+    const cleanedHeirs = (heirs || []).filter(h => h.name?.trim());
+
     const updated = await Pedhinamu.findByIdAndUpdate(
       id,
       {
         mukhya,
-        heirs: heirs || []
+        heirs: cleanedHeirs
       },
       { new: true, runValidators: true }
     );
@@ -219,6 +224,7 @@ export const updatePedhinamuTree = async (req, res) => {
     res.status(500).json({ error: "Failed to update Pedhinamu" });
   }
 };
+
 
 
 /* ============================================================
