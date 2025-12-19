@@ -7,6 +7,7 @@ export const login = async (req, res) => {
     const { username, password } = req.body;
 
     // 1) HARD-CODED ADMIN LOGIN
+    
     if (username === "admin" && password === "admin") {
       const token = jwt.sign(
         { _id: "admin_static_id", role: "admin" },
