@@ -1,4 +1,6 @@
 import { Router } from "express";
+import multer from "multer";
+import path from "path";
 import {
   createPedhinamu,
   getPedhinamus,
@@ -7,6 +9,19 @@ import {
   updatePedhinamuTree,
   softDeletePedhinamu
 } from "../controllers/pedhinamu.controller.js";
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
 
 const router = Router();
 
@@ -21,7 +36,7 @@ router.put("/:id", updatePedhinamuTree);
 /* ------------------------------------------
    FULL FORM (after basic pedhinamu)
 ---------------------------------------------*/
-router.post("/form/:id", saveFullForm);  // Save Full Form
+router.post("/form/:id", upload.any(), saveFullForm);  // Save Full Form with photo uploads
 router.get("/:id", getFullPedhinamu);    // Full details (basic + form)
 
 /* ------------------------------------------

@@ -25,10 +25,10 @@ export const createPedhinamu = async (req, res) => {
       },
 
       heirs: (d.heirs || [])
-        .filter(h => h.name?.trim())  // ✔ Only remove completely empty heir rows
+        .filter(h => h.name?.trim())
         .map(h => ({
           name: h.name || "",
-          relation: h.relation || "",  // ✔ Relation optional
+          relation: h.relation || "",
           age: h.age || "",
           dob: h.dob || "",
           dobDisplay: h.dobDisplay || "",
@@ -141,18 +141,115 @@ export const getPedhinamus = async (req, res) => {
 
 /* ============================================================
     3. SAVE FULL FORM (after basic pedhinamu)
+    ⚠️ HANDLES FORMDATA WITH FILE UPLOADS
    ============================================================ */
 export const saveFullForm = async (req, res) => {
   try {
     const { id } = req.params;
+    const body = req.body;
+
+    // console.log('=== FORM DATA RECEIVED ===');
+    // console.log('Raw panch:', body.panch);
+    // console.log('Files:', req.files?.length || 0);
+
+    // Helper function to safely parse JSON strings from FormData
+    const parseJson = (value) => {
+      if (!value) return undefined;
+      if (typeof value === 'object') return value;
+      if (typeof value === 'string') {
+        try {
+          return JSON.parse(value);
+        } catch (e) {
+          console.error('JSON parse error:', e.message);
+          return undefined;
+        }
+      }
+      return value;
+    };
+
+    // Parse all JSON fields that come as strings from FormData
+    const panch = parseJson(body.panch);
+    const deceasedPersons = parseJson(body.deceasedPersons);
+    const heirs = parseJson(body.heirs);
+    const documents = parseJson(body.documents);
+
+    // Validate panch array
+    if (!Array.isArray(panch)) {
+      console.error('❌ Panch is not an array:', typeof panch);
+      return res.status(400).json({ 
+        error: "Invalid panch data format",
+        received: typeof panch,
+        value: panch
+      });
+    }
+
+    
+
+    // Handle panch photos - assign to corresponding panch members
+    if (req.files && req.files.length > 0) {
+      const panchPhotos = req.files.filter(f => f.fieldname === 'panchPhotos');
+      console.log(`📷 Processing ${panchPhotos.length} panch photos`);
+
+      panchPhotos.forEach((file, index) => {
+        if (panch[index]) {
+          panch[index].photo = `/uploads/${file.filename}`;
+          console.log(`✅ Photo assigned to panch ${index}: ${file.filename}`);
+        }
+      });
+    }
+
+    // Build the clean update object
+    const updateData = {
+      pedhinamuId: id,
+      heirType: "alive",
+
+      // Parsed complex fields
+      panch: panch,
+      deceasedPersons: deceasedPersons || [],
+      heirs: heirs || [],
+      documents: documents || {},
+
+      // Simple string/number fields
+      applicantName: body.applicantName || "",
+      applicantSurname: body.applicantSurname || "",
+      applicantMobile: body.applicantMobile || "",
+      applicantAadhaar: body.applicantAadhaar || "",
+      applicationDate: body.applicationDate || "",
+
+      mukhyaName: body.mukhyaName || "",
+      mukhyaAge: body.mukhyaAge || "",
+
+      notaryName: body.notaryName || "",
+      notaryBookNo: body.notaryBookNo || "",
+      notaryPageNo: body.notaryPageNo || "",
+      notarySerialNo: body.notarySerialNo || "",
+      notaryDate: body.notaryDate || "",
+
+      referenceNo: body.referenceNo || "",
+      mukkamAddress: body.mukkamAddress || "",
+      jaminSurveyNo: body.jaminSurveyNo || "",
+      jaminKhatano: body.jaminKhatano || "",
+      reasonForPedhinamu: body.reasonForPedhinamu || "",
+
+      talatiName: body.talatiName || "",
+      varasdarType: body.varasdarType || "alive",
+      totalHeirsCount: parseInt(body.totalHeirsCount) || 0,
+      javadNo: body.javadNo || "",
+
+      totalDeceasedCount: parseInt(body.totalDeceasedCount) || 0,
+    };
+
+    
 
     const saved = await PedhinamuFormDetails.findOneAndUpdate(
       { pedhinamuId: id },
-      { ...req.body, pedhinamuId: id },
+      updateData,
       { upsert: true, new: true }
     );
 
     await Pedhinamu.findByIdAndUpdate(id, { hasFullForm: true });
+
+    
 
     res.json({
       success: true,
@@ -161,8 +258,11 @@ export const saveFullForm = async (req, res) => {
     });
 
   } catch (err) {
-    console.log("SAVE FULLFORM ERROR:", err);
-    res.status(500).json({ error: "Failed to save full form" });
+    console.error("❌ SAVE FULLFORM ERROR:", err);
+    res.status(500).json({ 
+      error: "Failed to save full form",
+      details: err.message 
+    });
   }
 };
 

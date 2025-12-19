@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Report Form</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      .page {
+        position: relative;
+        width: 1000px;
+        height: 1400px;
+        box-sizing: border-box;
+      }
+      .bg {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        z-index: 1;
+      }
+      .overlay {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        padding: 40px;
+        box-sizing: border-box;
+        z-index: 2;
+        color: #000;
+      }
+      .title { text-align: center; margin-bottom: 12px; font-weight: bold }
+      table { border-collapse: collapse; width: 100%; table-layout: fixed }
+      th, td { border: 1px solid #333; padding: 6px; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <% if (typeof imageData !== 'undefined') { %>
+        <img class="bg" src="<%= imageData %>" alt="background" />
+      <% } %>
+
+      <div class="overlay">
+        <div class="title">રોકડ નોંધ વિગતો - <%= type || '' %></div>
+        <div>સમયગાળો: <%= from || '' %> - <%= to || '' %></div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>તારીખ</th>
+              <th>વર્ણન</th>
+              <th>પુજા</th>
+              <th>અંદાજિત</th>
+              <th>રીમાર્ક્સ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (rows && rows.length) { %>
+              <% rows.forEach(function(r, idx) { %>
+                <tr>
+                  <td><%= idx + 1 %></td>
+                  <td><%= r.date || r.createdAt || '' %></td>
+                  <td><%= r.description || r.party || '' %></td>
+                  <td><%= r.amount || r.total || '' %></td>
+                  <td><%= r.type || '' %></td>
+                  <td><%= r.remarks || '' %></td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr><td colspan="6">No records</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

@@ -36,13 +36,21 @@ const PedhinamuFormDetailsSchema = new mongoose.Schema(
     reasonForPedhinamu: String,
 
     // ------------------------ Panch List ------------------------
+    deceasedPersons: [
+  {
+    name: String,
+    age: String,
+    date: String
+  }
+],
     panch: [
       {
         name: String,
         age: String,
         occupation: String,
         aadhaar: String,
-        mobile: String
+        mobile: String,
+        photo: String // Photo path/URL
       }
     ],
 
